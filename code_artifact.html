@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>건강 챙기미</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Mobile App Container */
+        #app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        /* Senior Mode Overrides */
+        .senior-mode {
+            font-size: 110%; /* Increase base font size */
+        }
+        .senior-mode .bg-teal-500 { background-color: #0f766e !important; } /* Higher contrast */
+        .senior-mode .bg-indigo-500 { background-color: #3730a3 !important; }
+        .senior-mode .text-gray-500 { color: #374151 !important; }
+        .senior-mode .text-gray-400 { color: #4b5563 !important; }
+
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #14b8a6;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #14b8a6;
+        }
+        
+        /* Modal Animation */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 200ms, transform 200ms;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container" class="relative">
+        <!-- App Header -->
+        <header class="pt-12 pb-4 px-6 bg-white z-10 flex justify-between items-center border-b border-gray-100">
+            <div>
+                <h1 id="header-date" class="text-sm font-semibold text-teal-600 mb-1">2026년 11월 6일</h1>
+                <h2 id="header-title" class="text-2xl font-bold text-gray-800">건강 챙기미</h2>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold">
+                이안
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-1 overflow-y-auto no-scrollbar bg-gray-50 pb-20 relative">
+            
+            <!-- VIEW: HOME -->
+            <div id="view-home" class="p-6 space-y-6">
+                <!-- Top: Meds -->
+                <section>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            오늘 먹을 약
+                        </h3>
+                        <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full" id="med-progress">0/0 완료</span>
+                    </div>
+                    <div id="home-meds-list" class="space-y-3">
+                        <!-- Med Items will be injected here -->
+                    </div>
+                </section>
+
+                <!-- Bottom: Sleep & Condition -->
+                <section class="mt-8">
+                    <h3 class="font-bold text-gray-800 flex items-center mb-4">
+                        <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        수면 및 컨디션
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Bedtime Card -->
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+                            <span class="text-sm text-gray-500 mb-1">오늘 잘 시간</span>
+                            <span id="home-bedtime" class="text-xl font-bold text-indigo-900">23:00</span>
+                        </div>
+                        
+                        <!-- Score Card -->
+                        <div class="bg-indigo-500 p-4 rounded-2xl shadow-md text-white flex flex-col items-center justify-center relative overflow-hidden">
+                            <div class="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-white opacity-10 rounded-full"></div>
+                            <span class="text-sm text-indigo-100 mb-1">어제 수면 점수</span>
+                            <div class="flex items-end">
+                                <span id="home-score" class="text-3xl font-bold">85</span>
+                                <span class="text-sm mb-1 ml-1">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: MEDS -->
+            <div id="view-meds" class="hidden p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-xl text-gray-800">약 관리</h3>
+                    <button onclick="showModal('add-med-modal')" class="bg-teal-500 text-white p-2 rounded-full shadow-md hover:bg-teal-600 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </button>
+                </div>
+                <div id="manage-meds-list" class="space-y-4">
+                    <!-- Manage Meds List -->
+                </div>
+            </div>
+
+            <!-- VIEW: SLEEP -->
+            <div id="view-sleep" class="hidden p-6 flex flex-col h-full">
+                <h3 class="font-bold text-xl text-gray-800 mb-6">수면 관리 시뮬레이션</h3>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex-1">
+                    <div class="mb-8">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">목표 취침 시간</label>
+                        <input type="time" id="input-bedtime" value="23:00" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" onchange="updateBedtime(this.value)">
+                    </div>
+
+                    <div class="space-y-4 border-t border-gray-100 pt-6">
+                        <p class="text-sm text-gray-500 mb-4 text-center">앱 흐름을 테스트해보세요.</p>
+                        <button onclick="simulateBedtimeAlarm()" class="w-full py-4 bg-indigo-50 text-indigo-700 rounded-xl font-semibold hover:bg-indigo-100 transition flex justify-center items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                            취침 시간 알람 (스마트 감지)
+                        </button>
+                        <button onclick="simulateMorningWake()" class="w-full py-4 bg-yellow-50 text-yellow-700 rounded-xl font-semibold hover:bg-yellow-100 transition flex justify-center items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            아침 기상 및 점수 계산
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: SETTINGS -->
+            <div id="view-settings" class="hidden p-6 space-y-6">
+                <h3 class="font-bold text-xl text-gray-800 mb-4">설정</h3>
+                
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">사용자 나이 (수면 점수 기준)</label>
+                        <input type="number" id="setting-age" value="25" min="5" max="90" onchange="updateSettings()" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-500">
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
+                    <h4 class="font-bold text-gray-800 text-sm">약 복용 재알림 설정 (기본값)</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">간격 (분)</label>
+                            <input type="number" id="setting-interval" value="20" onchange="updateSettings()" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-teal-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">횟수 (번)</label>
+                            <input type="number" id="setting-count" value="2" onchange="updateSettings()" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-teal-500">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400">약을 체크하지 않으면 설정된 간격으로 다시 알려줍니다.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">시니어 모드</h4>
+                        <p class="text-xs text-gray-400">큰 글씨와 선명한 색상</p>
+                    </div>
+                    <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="senior-toggle" onchange="toggleSeniorMode()" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer transition-all duration-300 z-10 top-0 left-0"/>
+                        <label for="senior-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300"></label>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex justify-around pb-safe pt-2 px-2 z-20" style="padding-bottom: env(safe-area-inset-bottom, 16px);">
+            <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center p-2 text-teal-600 w-1/4" data-target="home">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="text-[10px] font-medium">홈</span>
+            </button>
+            <button onclick="switchTab('meds')" class="nav-btn flex flex-col items-center p-2 text-gray-400 hover:text-teal-500 w-1/4" data-target="meds">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <span class="text-[10px] font-medium">약 관리</span>
+            </button>
+            <button onclick="switchTab('sleep')" class="nav-btn flex flex-col items-center p-2 text-gray-400 hover:text-indigo-500 w-1/4" data-target="sleep">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <span class="text-[10px] font-medium">수면</span>
+            </button>
+            <button onclick="switchTab('settings')" class="nav-btn flex flex-col items-center p-2 text-gray-400 hover:text-gray-800 w-1/4" data-target="settings">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span class="text-[10px] font-medium">설정</span>
+            </button>
+        </nav>
+
+        <!-- Custom Modals Overlay -->
+        <div id="modal-overlay" class="hidden absolute inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+            
+            <!-- Global Message Modal -->
+            <div id="msg-modal" class="hidden bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl text-center transform transition-all">
+                <div id="msg-icon" class="mx-auto w-12 h-12 mb-4 text-teal-500">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 id="msg-title" class="text-lg font-bold text-gray-900 mb-2">알림</h3>
+                <p id="msg-desc" class="text-sm text-gray-500 mb-6">메시지 내용이 여기에 표시됩니다.</p>
+                <button onclick="closeModal()" class="w-full py-3 bg-teal-500 text-white rounded-xl font-semibold">확인</button>
+            </div>
+
+            <!-- Add Med Modal -->
+            <div id="add-med-modal" class="hidden bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl transform transition-all">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">새 약 등록</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">약 이름</label>
+                        <input type="text" id="new-med-name" placeholder="예: 비타민, 혈압약" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">복용 시간</label>
+                        <input type="time" id="new-med-time" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-500">
+                    </div>
+                    <div class="flex space-x-3 pt-2">
+                        <button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold">취소</button>
+                        <button onclick="addMedication()" class="flex-1 py-3 bg-teal-500 text-white rounded-xl font-semibold">저장하기</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bedtime Check Modal -->
+            <div id="bedtime-modal" class="hidden bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl text-center transform transition-all border-t-4 border-indigo-500">
+                <div class="mx-auto w-16 h-16 mb-4 text-indigo-500 animate-pulse">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">취침 알람</h3>
+                <p class="text-sm text-gray-500 mb-6">설정한 시간이 되었습니다.<br>(스마트 센서: 15분 후 미응답시 자동 수면 처리)</p>
+                <div class="space-y-3">
+                    <button onclick="handleSleepChoice('now')" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-md">이제 잘 거예요</button>
+                    <button onclick="handleSleepChoice('late')" class="w-full py-3 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl font-semibold">오늘은 늦게 잘 거예요</button>
+                </div>
+            </div>
+
+            <!-- Morning Score Modal -->
+            <div id="morning-modal" class="hidden bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl text-center transform transition-all border-t-4 border-yellow-400">
+                <div class="mx-auto w-16 h-16 mb-2 text-yellow-400">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-1">좋은 아침입니다!</h3>
+                <p class="text-sm text-gray-500 mb-6">실제 수면시간: <span id="actual-sleep-time" class="font-bold">7시간 30분</span><br>오늘 기분이 어떤가요?</p>
+                
+                <input type="range" id="feeling-slider" min="0" max="100" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mb-2">
+                <div class="flex justify-between text-xs text-gray-400 mb-6 px-1">
+                    <span>매우 피곤</span>
+                    <span>개운함!</span>
+                </div>
+                
+                <button onclick="calculateFinalScore()" class="w-full py-3 bg-yellow-400 text-white rounded-xl font-bold shadow-md">컨디션 점수 확인하기</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        const state = {
+            user: { age: 25 },
+            settings: { interval: 20, count: 2, seniorMode: false },
+            sleep: { 
+                bedtime: '23:00', 
+                yesterdayScore: 85,
+                sleepDurationHours: 7.5, // Mock default
+                isLate: false
+            },
+            meds: [
+                { id: 1, name: '고혈압 약', time: '08:00', checked: true },
+                { id: 2, name: '종합 비타민', time: '13:00', checked: false },
+                { id: 3, name: '유산균', time: '20:00', checked: false }
+            ]
+        };
+
+        // Initialize App
+        window.onload = function() {
+            renderHeaderDate();
+            renderMeds();
+            renderSleep();
+            updateSettingsUI();
+        };
+
+        function renderHeaderDate() {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
+            document.getElementById('header-date').innerText = new Date().toLocaleDateString('ko-KR', options);
+        }
+
+        // --- Navigation Logic ---
+        function switchTab(tabId) {
+            // Hide all views
+            ['view-home', 'view-meds', 'view-sleep', 'view-settings'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            // Show target view
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            // Update Nav styling
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.target === tabId) {
+                    btn.classList.add('text-teal-600');
+                    if(tabId === 'sleep') btn.classList.replace('text-teal-600', 'text-indigo-600');
+                    if(tabId === 'settings') btn.classList.replace('text-teal-600', 'text-gray-800');
+                    btn.classList.remove('text-gray-400');
+                } else {
+                    btn.className = `nav-btn flex flex-col items-center p-2 text-gray-400 w-1/4 hover:text-gray-600`;
+                }
+            });
+
+            // Re-render data if returning to home
+            if (tabId === 'home') {
+                renderMeds();
+                renderSleep();
+            } else if (tabId === 'meds') {
+                renderManageMeds();
+            }
+        }
+
+        // --- Medication Logic ---
+        function renderMeds() {
+            const list = document.getElementById('home-meds-list');
+            list.innerHTML = '';
+            
+            let checkedCount = 0;
+            
+            // Sort by time
+            const sortedMeds = [...state.meds].sort((a, b) => a.time.localeCompare(b.time));
+
+            if(sortedMeds.length === 0) {
+                list.innerHTML = '<p class="text-center text-sm text-gray-500 py-4 bg-white rounded-xl">등록된 약이 없습니다.<br>약 관리 탭에서 추가해주세요.</p>';
+            }
+
+            sortedMeds.forEach(med => {
+                if(med.checked) checkedCount++;
+                
+                const div = document.createElement('div');
+                div.className = `flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border ${med.checked ? 'border-teal-100 bg-teal-50' : 'border-gray-100'}`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center mr-4 ${med.checked ? 'bg-teal-200 text-teal-700' : 'bg-gray-100 text-gray-500'}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold ${med.checked ? 'text-teal-900 line-through' : 'text-gray-800'}">${med.name}</p>
+                            <p class="text-xs ${med.checked ? 'text-teal-600' : 'text-gray-500'}">${med.time} 복용</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleMed(${med.id})" class="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${med.checked ? 'border-teal-500 bg-teal-500' : 'border-gray-300 bg-white'}">
+                        ${med.checked ? '<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+
+            document.getElementById('med-progress').innerText = `${checkedCount}/${sortedMeds.length} 완료`;
+        }
+
+        function renderManageMeds() {
+            const list = document.getElementById('manage-meds-list');
+            list.innerHTML = '';
+            
+            const sortedMeds = [...state.meds].sort((a, b) => a.time.localeCompare(b.time));
+            
+            sortedMeds.forEach(med => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm';
+                div.innerHTML = `
+                    <div>
+                        <p class="font-bold text-gray-800">${med.name}</p>
+                        <p class="text-sm text-gray-500">${med.time}</p>
+                    </div>
+                    <button onclick="deleteMed(${med.id})" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function toggleMed(id) {
+            const med = state.meds.find(m => m.id === id);
+            if (med) {
+                med.checked = !med.checked;
+                renderMeds();
+                
+                if(!med.checked) {
+                    showMsg('재알림 설정됨', `확인하지 않으셨습니다. 설정된 ${state.settings.interval}분 뒤 다시 알려드립니다. (최대 ${state.settings.count}회)`);
+                }
+            }
+        }
+
+        function addMedication() {
+            const name = document.getElementById('new-med-name').value;
+            const time = document.getElementById('new-med-time').value;
+            
+            if(!name || !time) {
+                showMsg('입력 오류', '약 이름과 복용 시간을 모두 입력해주세요.');
+                return;
+            }
+
+            const newMed = {
+                id: Date.now(),
+                name: name,
+                time: time,
+                checked: false
+            };
+
+            state.meds.push(newMed);
+            document.getElementById('new-med-name').value = '';
+            document.getElementById('new-med-time').value = '';
+            closeModal();
+            renderManageMeds();
+            showMsg('등록 완료', `${name} 복용 일정이 추가되었습니다.`);
+        }
+
+        function deleteMed(id) {
+            state.meds = state.meds.filter(m => m.id !== id);
+            renderManageMeds();
+        }
+
+        // --- Sleep Logic ---
+        function renderSleep() {
+            document.getElementById('home-bedtime').innerText = state.sleep.bedtime;
+            document.getElementById('home-score').innerText = state.sleep.yesterdayScore;
+            
+            // update simulation input
+            document.getElementById('input-bedtime').value = state.sleep.bedtime;
+        }
+
+        function updateBedtime(val) {
+            state.sleep.bedtime = val;
+            renderSleep();
+            showMsg('취침 시간 변경', `오늘 취침 시간이 ${val}로 설정되었습니다.`);
+        }
+
+        function simulateBedtimeAlarm() {
+            showModal('bedtime-modal');
+        }
+
+        function handleSleepChoice(choice) {
+            closeModal();
+            if(choice === 'now') {
+                state.sleep.isLate = false;
+                showMsg('수면 모드', '조용한 수면 모드가 시작됩니다. 안녕히 주무세요.');
+            } else {
+                state.sleep.isLate = true;
+                // Penalize slightly for sleep duration in simulation
+                state.sleep.sleepDurationHours = 5; 
+                showMsg('수면 모드', '오늘은 늦게 주무시는군요. 알람을 중지합니다.');
+            }
+        }
+
+        function simulateMorningWake() {
+            document.getElementById('actual-sleep-time').innerText = 
+                state.sleep.isLate ? "약 5시간 (늦게 취침)" : "약 7시간 30분";
+            document.getElementById('feeling-slider').value = state.sleep.isLate ? 30 : 80;
+            showModal('morning-modal');
+        }
+
+        function calculateFinalScore() {
+            const feelingScore = parseInt(document.getElementById('feeling-slider').value); // 0-100
+            
+            // 1. Age-based recommended sleep (Simplified logic)
+            // Youth (5-19): 9 hours, Adult (20+): 8 hours
+            const recommended = state.user.age < 20 ? 9 : 8;
+            const actual = state.sleep.sleepDurationHours;
+            
+            // 2. Base sleep score calculation (50% max)
+            // Ratio of actual vs recommended. Max 1.0
+            let durationRatio = actual / recommended;
+            if(durationRatio > 1.2) durationRatio = 1; // Oversleeping penalty omitted for simplicity
+            
+            const objScore = Math.min(50, Math.round(durationRatio * 50));
+            
+            // 3. Subjective score calculation (50% max)
+            const subjScore = Math.round(feelingScore / 2);
+
+            // Total 100
+            const total = objScore + subjScore;
+            
+            state.sleep.yesterdayScore = total;
+            
+            closeModal();
+            switchTab('home'); // Go to home to see score
+            showMsg('점수 계산 완료', `수면 시간(${objScore}/50) + 개운함(${subjScore}/50)\n오늘의 컨디션 점수는 ${total}% 입니다.`);
+        }
+
+        // --- Settings / Accessibility ---
+        function updateSettingsUI() {
+            document.getElementById('setting-age').value = state.user.age;
+            document.getElementById('setting-interval').value = state.settings.interval;
+            document.getElementById('setting-count').value = state.settings.count;
+            document.getElementById('senior-toggle').checked = state.settings.seniorMode;
+        }
+
+        function updateSettings() {
+            const age = parseInt(document.getElementById('setting-age').value);
+            const interval = parseInt(document.getElementById('setting-interval').value);
+            const count = parseInt(document.getElementById('setting-count').value);
+
+            if (age < 5 || age > 90 || isNaN(age)) {
+                showMsg('입력 오류', '나이는 5세부터 90세 사이로 입력해주세요.');
+                document.getElementById('setting-age').value = state.user.age;
+                return;
+            }
+            if (interval <= 0 || isNaN(interval)) {
+                showMsg('입력 오류', '간격은 1분 이상이어야 합니다. 기본값(20분)으로 되돌립니다.');
+                document.getElementById('setting-interval').value = 20;
+                state.settings.interval = 20;
+                return;
+            }
+
+            state.user.age = age;
+            state.settings.interval = interval;
+            state.settings.count = count;
+            
+            showMsg('설정 저장', `약 재알림이 ${interval}분 간격, ${count}회로 설정되었습니다.`);
+        }
+
+        function toggleSeniorMode() {
+            state.settings.seniorMode = document.getElementById('senior-toggle').checked;
+            const container = document.getElementById('app-container');
+            if(state.settings.seniorMode) {
+                container.classList.add('senior-mode');
+            } else {
+                container.classList.remove('senior-mode');
+            }
+        }
+
+        // --- Custom Modals ---
+        function showModal(id) {
+            // Hide all inner modals first
+            ['msg-modal', 'add-med-modal', 'bedtime-modal', 'morning-modal'].forEach(mid => {
+                document.getElementById(mid).classList.add('hidden');
+            });
+            
+            const overlay = document.getElementById('modal-overlay');
+            const target = document.getElementById(id);
+            
+            overlay.classList.remove('hidden');
+            target.classList.remove('hidden');
+            
+            // Simple enter animation
+            target.classList.add('modal-enter');
+            setTimeout(() => {
+                target.classList.remove('modal-enter');
+                target.classList.add('modal-enter-active');
+            }, 10);
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+
+        function showMsg(title, desc) {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-desc').innerText = desc;
+            showModal('msg-modal');
+        }
+
+    </script>
+</body>
+</html>
